@@ -19,7 +19,7 @@ the new version is ready the next time Lantern starts.
 
 ### Update server
 
-![lanternautoupdates - server process](https://cloud.githubusercontent.com/assets/385670/6097032/7745c3e0-af72-11e4-87cc-5579f5cce67c.png)
+![lanternautoupdates - server process](https://cloud.githubusercontent.com/assets/385670/6097042/cb08d42c-af72-11e4-9ca4-d09af2fbb11b.png)
 
 The update server holds a list of releases and waits for queries from clients.
 Clients will send their own checksum and the server will compare that checksum
