@@ -7,7 +7,7 @@ At this time, `autoupdate` relies on the [go-update][2] package and the
 
 ## General flow
 
-![lanternautoupdates - general client](https://cloud.githubusercontent.com/assets/385670/6096628/a4b53b78-af61-11e4-829a-f3be4a011846.png)
+![lanternautoupdates - general client](https://cloud.githubusercontent.com/assets/385670/6097030/736614c8-af72-11e4-932f-07f718c51673.png)
 
 At some point on the Lantern application's lifetime, an independent process
 will be created, this process will periodically send local information (using a
@@ -19,7 +19,7 @@ the new version is ready the next time Lantern starts.
 
 ### Update server
 
-![lanternautoupdates - server process](https://cloud.githubusercontent.com/assets/385670/6096630/a85e20e6-af61-11e4-85e0-03e2f0740057.png)
+![lanternautoupdates - server process](https://cloud.githubusercontent.com/assets/385670/6097032/7745c3e0-af72-11e4-87cc-5579f5cce67c.png)
 
 The update server holds a list of releases and waits for queries from clients.
 Clients will send their own checksum and the server will compare that checksum
@@ -34,7 +34,7 @@ by the update server.
 
 ### Client
 
-![lanternautoupdates - auto update process](https://cloud.githubusercontent.com/assets/385670/6096629/a6ede304-af61-11e4-940c-c56a4c28b3d5.png)
+![lanternautoupdates - auto update process](https://cloud.githubusercontent.com/assets/385670/6097031/755f89c6-af72-11e4-82ea-0c82f27160b2.png)
 
 A client will compute the checksum of its executable file and will send it to
 an update server periodically. When the update server replies with a special
