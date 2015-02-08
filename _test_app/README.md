@@ -100,7 +100,7 @@ go build main.go
 
 Finally, run the `main` program and wait a bit for it to update.
 
-```
+```sh
 ./main
 # Running program version: 1, binary file version: 1
 # Running program version: 1, binary file version: 1
@@ -116,7 +116,7 @@ Finally, run the `main` program and wait a bit for it to update.
 The next time the program runs, it will display version 3 instead of version 1
 for both software and executable.
 
-```
+```sh
 ./main
 # Running program version: 3, binary file version: 3
 # Running program version: 3, binary file version: 3
