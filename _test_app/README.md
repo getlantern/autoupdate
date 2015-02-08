@@ -7,22 +7,26 @@ backend.
 
 ## Instructions
 
-1. [Sign up](https://equinox.io/user/signup) for [equinox.io][1].
-2. Create a new application using the equinox
-   [dashboard](https://equinox.io/dashboard).
-3. Identify the **Account ID**, **Secret Key** and the new application's
-   **Application ID**
-4. Download the equinox tool from the dashboard.
-5. We are going to sign our releases, that's why we need a keypair. Create a
-   new one using `openssl`:
+[Sign up](https://equinox.io/user/signup) for [equinox.io][1].
+
+Create a new application using the equinox
+[dashboard](https://equinox.io/dashboard).
+
+Identify the **Account ID**, **Secret Key** and the new application's
+**Application ID**
+
+Download the equinox tool from the dashboard.
+
+We are going to sign our releases, that's why we need a keypair. Create a new
+one using `openssl`:
 
 ```sh
 openssl genrsa -out private.pem 2048
 openssl rsa -in private.pem -out public.pem -pubout
 ```
 
-7. Create a new entry for the application inside `config.go` that resembles the
-   following map:
+Add a new entry for the application inside `config.go` that resembles the
+following map:
 
 ```go
 // config.go
@@ -39,7 +43,7 @@ var configMap = map[string]*config{
 }
 ```
 
-6. Create a `equinox.yaml` file, we're going to store settings for `equinox`.
+Create a `equinox.yaml` file, we're going to store settings for `equinox`.
 
 ```yaml
 ---
@@ -50,10 +54,10 @@ channel: stable
 private-key: ./private.pem
 ```
 
-7. Use the `equinox` tool to update a new version, instead of using floating
-   point numbers to describe a release, use integers, it will be easier as the
-   next greatest number than `n` is always defined by `n + 1` and we'll have no
-   chance of hitting a bug derived from comparison of floating point values.
+Use the `equinox` tool to update a new version, instead of using floating point
+numbers to describe a release, use integers, it will be easier as the next
+greatest number than `n` is always defined by `n + 1` and we'll have no chance
+of hitting a bug derived from comparison of floating point values.
 
 ```sh
 equinox release --config equinox.yaml --version=1 main.go
@@ -81,7 +85,7 @@ Increate `internalVersion` to 2 and upload it:
 equinox release ... --version=2 main.go
 ```
 
-Then bump it to `3` and upload it again:
+Then, bump it to `3` and upload it again:
 
 ```sh
 equinox release ... --version=3 main.go
