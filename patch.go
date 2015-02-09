@@ -3,7 +3,7 @@ package autoupdate
 import (
 	"log"
 
-	"github.com/inconshreveable/go-update/check"
+	"github.com/getlantern/go-update/check"
 )
 
 // Patch satisfies Patcher and can be used for other programs to apply patches
