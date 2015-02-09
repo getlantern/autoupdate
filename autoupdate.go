@@ -5,11 +5,13 @@ package autoupdate
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/inconshreveable/go-update"
-	"github.com/inconshreveable/go-update/check"
+	"github.com/getlantern/flashlight/util"
+	"github.com/getlantern/go-update"
+	"github.com/getlantern/go-update/check"
 )
 
 const noVersion = -1
@@ -24,6 +26,20 @@ var (
 	// How much time should we wait between update attempts?
 	sleepTime = time.Hour * 4
 )
+
+// SetProxy sets the proxy to use.
+func SetProxy(proxyAddr string) {
+	var err error
+
+	if proxyAddr != "" {
+		// Create a HTTP proxy and pass it to the update package.
+		if update.HTTPClient, err = util.HTTPClient("", proxyAddr); err != nil {
+			log.Printf("Could not use proxy: %q\n", err)
+		}
+	} else {
+		update.HTTPClient = &http.Client{}
+	}
+}
 
 // AutoUpdate satisfies AutoUpdater and can be used for other programs to
 // configure automatic updates.

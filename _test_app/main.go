@@ -21,6 +21,9 @@ const (
 var au *autoupdate.AutoUpdate
 
 func init() {
+	// Setting the proxy we're going to use for auto-updates.
+	autoupdate.SetProxy("127.0.0.1:9999")
+
 	// Update settings (such as equinox's tokens and the public key used to
 	// verify signatures) are defined per app in config.go. We're doing that
 	// instead of passing a Config struct to keep the autoupdate API independent
