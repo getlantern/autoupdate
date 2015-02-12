@@ -33,6 +33,10 @@ func (c *Client) Header() http.Header {
 	return h
 }
 
+func (c *Client) AnnounceRelease(uri string) (interface{}, error) {
+	return nil, nil
+}
+
 func (c *Client) PostRelease(src string) (*AssetResponse, error) {
 	var err error
 	var fp *os.File
