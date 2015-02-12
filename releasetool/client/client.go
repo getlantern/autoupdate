@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -36,7 +35,54 @@ func (c *Client) headers() http.Header {
 }
 
 // AnnounceRelease relates an asset with a release.
-func (c *Client) AnnounceRelease(uri string) (interface{}, error) {
+func (c *Client) AnnounceRelease(message *Announcement) (*Announcement, error) {
+	var err error
+	var uri *url.URL
+	var res *http.Response
+	var buf []byte
+
+	if uri, err = url.Parse(fmt.Sprintf(endpointReleases, c.cfg.ApplicationID)); err != nil {
+		return nil, err
+	}
+
+	if buf, err = json.Marshal(message); err != nil {
+		return nil, err
+	}
+
+	h := c.headers()
+	h.Add("Content-Type", "application/json")
+
+	req := &http.Request{
+		URL:    uri,
+		Method: "POST",
+		Header: h,
+		Body:   ioutil.NopCloser(bytes.NewBuffer(buf)),
+	}
+
+	req.ContentLength = int64(len(buf))
+
+	if res, err = c.cli.Do(req); err != nil {
+		return nil, err
+	}
+
+	defer res.Body.Close()
+
+	if res.StatusCode == http.StatusCreated {
+		// Reading body.
+		var msgData []byte
+		var msg Announcement
+
+		if msgData, err = ioutil.ReadAll(res.Body); err != nil {
+			return nil, err
+		}
+
+		if err = json.Unmarshal(msgData, &msg); err != nil {
+			return nil, err
+		}
+
+		return &msg, nil
+	}
+
 	return nil, nil
 }
 
@@ -72,8 +118,6 @@ func (c *Client) UploadAsset(src string) (*AssetResponse, error) {
 
 	req.ContentLength = int64(buf.Len())
 
-	log.Println("Uploading binary file...")
-
 	if res, err = c.cli.Do(req); err != nil {
 		return nil, err
 	}
@@ -82,23 +126,18 @@ func (c *Client) UploadAsset(src string) (*AssetResponse, error) {
 
 	if res.StatusCode == http.StatusCreated {
 		// Reading body.
-		switch res.Header.Get("Content-Type") {
-		case "application/json; charset=UTF-8":
-			var msgData []byte
-			var msg AssetResponse
+		var msgData []byte
+		var msg AssetResponse
 
-			if msgData, err = ioutil.ReadAll(res.Body); err != nil {
-				return nil, err
-			}
-
-			if err = json.Unmarshal(msgData, &msg); err != nil {
-				return nil, err
-			}
-
-			return &msg, nil
-		default:
-			return nil, fmt.Errorf("Expecting application/json response, got %s.", res.Header.Get("Content-Type"))
+		if msgData, err = ioutil.ReadAll(res.Body); err != nil {
+			return nil, err
 		}
+
+		if err = json.Unmarshal(msgData, &msg); err != nil {
+			return nil, err
+		}
+
+		return &msg, nil
 	}
 
 	return nil, errors.New("Failed to create asset.")

@@ -6,7 +6,6 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/hex"
-	"encoding/json"
 	"encoding/pem"
 	"flag"
 	"fmt"
@@ -42,16 +41,25 @@ func main() {
 	// Parsing flags
 	flag.Parse()
 
+	// Validating version.
 	if *flagVersion < 0 {
 		log.Fatal("Version must be a positive integer (-version).")
 	}
 
-	if *flagArch == "" {
-		log.Fatal("Missing build architecture (-arch).")
+	// Validating arch.
+	switch *flagArch {
+	case "amd64", "386":
+		// OK.
+	default:
+		log.Fatal("Missing a valid build architecture (-arch).")
 	}
 
-	if *flagOS == "" {
-		log.Fatal("Missing build target operating system (-os).")
+	// Validating OS.
+	switch *flagOS {
+	case "linux", "darwin", "windows":
+		// OK.
+	default:
+		log.Fatal("Missing a valid build target operating system (-os).")
 	}
 
 	// Opening config file.
@@ -69,19 +77,15 @@ func main() {
 		log.Fatal(fmt.Errorf("Could not parse config file: %q", err))
 	}
 
-	// Creating client
-	var res *client.AssetResponse
-
-	cli := client.NewClient(cfg)
-	if res, err = cli.PostRelease(*flagSource); err != nil {
-		log.Fatal(fmt.Errorf("Could not upload release: %q", err))
-	}
-
 	var checksum []byte
 
 	if checksum, err = update.ChecksumForFile(*flagSource); err != nil {
 		log.Fatal(fmt.Errorf("Could not create checksum for file: %q", err))
 	}
+
+	checksumHex := hex.EncodeToString(checksum)
+
+	log.Printf("%s %s\n", checksumHex, *flagSource)
 
 	// Loading private key
 	var pb []byte
@@ -110,8 +114,22 @@ func main() {
 		log.Fatal(fmt.Errorf("Could not create signature for file: %q", err))
 	}
 
-	// Preparing message.
-	announce := client.Announcement{
+	signatureHex := hex.EncodeToString(signature)
+
+	// Creating client
+	var res *client.AssetResponse
+
+	cli := client.NewClient(cfg)
+
+	// Uploading asset.
+	log.Printf("Uploading asset...")
+
+	if res, err = cli.UploadAsset(*flagSource); err != nil {
+		log.Fatal(fmt.Errorf("Could not upload release: %q", err))
+	}
+
+	// Preparing release message.
+	announce := &client.Announcement{
 		Version: strconv.Itoa(*flagVersion),
 		Tags: map[string]string{
 			"channel": *flagChannel,
@@ -120,8 +138,8 @@ func main() {
 		Assets: []client.AnnouncementAsset{
 			client.AnnouncementAsset{
 				URL:       res.URL,
-				Checksum:  hex.EncodeToString(checksum),
-				Signature: hex.EncodeToString(signature),
+				Checksum:  checksumHex,
+				Signature: signatureHex,
 				Tags: map[string]string{
 					"arch": *flagArch,
 					"os":   *flagOS,
@@ -130,11 +148,18 @@ func main() {
 		},
 	}
 
-	var msg []byte
-	if msg, err = json.Marshal(announce); err != nil {
-		panic(err)
+	// Announcing release.
+	var annres *client.Announcement
+
+	log.Printf("Announcing release...")
+
+	if annres, err = cli.AnnounceRelease(announce); err != nil {
+		log.Fatal(fmt.Errorf("Failed to actually announce release: %q", err))
 	}
 
-	fmt.Printf("AssetResponse: %v\n", res)
-	fmt.Printf("AssetResponse: %v\n", string(msg))
+	if !annres.Active {
+		log.Fatal(fmt.Errorf("Failed to enable release."))
+	}
+
+	log.Printf("Release uploaded successfully!")
 }
