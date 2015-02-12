@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"bytes"
@@ -13,11 +13,13 @@ import (
 	"os"
 )
 
+// Client provides methods for
 type Client struct {
 	cfg Config
 	cli *http.Client
 }
 
+// NewClient allocates a new client with the given configuration.
 func NewClient(cfg Config) *Client {
 	c := Client{
 		cfg: cfg,
@@ -26,18 +28,20 @@ func NewClient(cfg Config) *Client {
 	return &c
 }
 
-func (c *Client) Header() http.Header {
+func (c *Client) headers() http.Header {
 	h := http.Header{}
-	h.Add("Authorization", "Basic "+c.cfg.AuthHeader())
+	h.Add("Authorization", "Basic "+c.cfg.authHeader())
 	h.Add("Content-Type", "application/octect-stream")
 	return h
 }
 
+// AnnounceRelease relates an asset with a release.
 func (c *Client) AnnounceRelease(uri string) (interface{}, error) {
 	return nil, nil
 }
 
-func (c *Client) PostRelease(src string) (*AssetResponse, error) {
+// UploadAsset pushes an asset to equinox.
+func (c *Client) UploadAsset(src string) (*AssetResponse, error) {
 	var err error
 	var fp *os.File
 	var buf *bytes.Buffer
@@ -62,7 +66,7 @@ func (c *Client) PostRelease(src string) (*AssetResponse, error) {
 	req := &http.Request{
 		URL:    uri,
 		Method: "POST",
-		Header: c.Header(),
+		Header: c.headers(),
 		Body:   ioutil.NopCloser(buf),
 	}
 

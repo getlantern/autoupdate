@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"encoding/base64"
@@ -11,6 +11,7 @@ const (
 	endpointReleases = endpointPrefix + "/1/Applications/%s/Releases"
 )
 
+// Config defines configuration values that can be used to set up a Client.
 type Config struct {
 	AccountID     string `yaml:"account_id"`
 	SecretKey     string `yaml:"secret_key"`
@@ -19,7 +20,7 @@ type Config struct {
 	PrivateKey    string `yaml:"private_key"`
 }
 
-func (c Config) AuthHeader() string {
+func (c Config) authHeader() string {
 	s := fmt.Sprintf("%s:%s", c.AccountID, c.SecretKey)
 	return base64.StdEncoding.EncodeToString([]byte(s))
 }

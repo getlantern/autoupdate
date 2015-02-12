@@ -10,12 +10,14 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
-	"github.com/inconshreveable/go-update"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
+
+	"github.com/getlantern/autoupdate/releasetool/client"
+	"github.com/getlantern/go-update"
+	"github.com/getlantern/yaml"
 )
 
 const (
@@ -33,7 +35,7 @@ var (
 
 func main() {
 	var fp *os.File
-	var cfg Config
+	var cfg client.Config
 	var err error
 	var buf []byte
 
@@ -68,9 +70,9 @@ func main() {
 	}
 
 	// Creating client
-	var res *AssetResponse
+	var res *client.AssetResponse
 
-	cli := NewClient(cfg)
+	cli := client.NewClient(cfg)
 	if res, err = cli.PostRelease(*flagSource); err != nil {
 		log.Fatal(fmt.Errorf("Could not upload release: %q", err))
 	}
@@ -109,14 +111,14 @@ func main() {
 	}
 
 	// Preparing message.
-	announce := Announcement{
+	announce := client.Announcement{
 		Version: strconv.Itoa(*flagVersion),
 		Tags: map[string]string{
 			"channel": *flagChannel,
 		},
 		Active: true,
-		Assets: []AnnouncementAsset{
-			AnnouncementAsset{
+		Assets: []client.AnnouncementAsset{
+			client.AnnouncementAsset{
 				URL:       res.URL,
 				Checksum:  hex.EncodeToString(checksum),
 				Signature: hex.EncodeToString(signature),
