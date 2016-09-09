@@ -15,7 +15,7 @@ import (
 
 type Updater interface {
 	// PublishProgress: publish percentage of update already downloaded
-	PublishProgress(int)
+	Progress(int)
 }
 
 // byteCounter wraps an existing io.Reader and keeps track of the byte
@@ -33,7 +33,7 @@ func (pt *byteCounter) Read(p []byte) (int, error) {
 	if n > 0 {
 		pt.total += int64(n)
 		percentage := float64(pt.total) / float64(pt.length) * float64(100)
-		pt.Updater.PublishProgress(int(percentage))
+		pt.Updater.Progress(int(percentage))
 	}
 	return n, err
 }
