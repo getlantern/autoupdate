@@ -121,7 +121,7 @@ func checkUpdate(currentVersion, URL string, publicKey []byte) (res *check.Resul
 	}
 
 	if res, err = param.CheckForUpdate(URL, up); err != nil {
-		if err == check.NoUpdateAvailable {
+		if err == check.ErrNoUpdateAvailable {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("Problem fetching update: %v", err)
