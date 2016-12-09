@@ -5,6 +5,7 @@ package autoupdate
 import (
 	"fmt"
 	"net/http"
+	"runtime"
 	"time"
 
 	"github.com/blang/semver"
@@ -114,10 +115,12 @@ func checkUpdate(currentVersion, URL string, publicKey []byte) (res *check.Resul
 		AppVersion: currentVersion,
 	}
 
-	up = update.New().ApplyPatch(update.PATCHTYPE_BSDIFF)
+	if runtime.GOOS != "android" {
+		up = update.New().ApplyPatch(update.PATCHTYPE_BSDIFF)
 
-	if _, err = up.VerifySignatureWithPEM(publicKey); err != nil {
-		return nil, fmt.Errorf("Problem verifying signature of update: %v", err)
+		if _, err = up.VerifySignatureWithPEM(publicKey); err != nil {
+			return nil, fmt.Errorf("Problem verifying signature of update: %v", err)
+		}
 	}
 
 	if res, err = param.CheckForUpdate(URL, up); err != nil {
