@@ -38,11 +38,11 @@ func (pt *byteCounter) Read(p []byte) (int, error) {
 	return n, err
 }
 
-func doCheckUpdate(shouldProxy bool, version, URL string, publicKey []byte) (string, error) {
+func doCheckUpdate(version, URL string, publicKey []byte) (string, error) {
 
 	log.Debugf("Checking for new mobile version; current version: %s", version)
 
-	httpClient, err := proxied.GetHTTPClient(shouldProxy)
+	httpClient, err := proxied.GetHTTPClient()
 	if err != nil {
 		log.Errorf("Could not get HTTP client to download update: %v", err)
 		return "", err
@@ -77,30 +77,29 @@ func doCheckUpdate(shouldProxy bool, version, URL string, publicKey []byte) (str
 }
 
 // CheckMobileUpdate checks if a new update is available for mobile.
-func CheckMobileUpdate(shouldProxy bool, updateServer, appVersion string) (string, error) {
-	return doCheckUpdate(shouldProxy, appVersion,
+func CheckMobileUpdate(updateServer, appVersion string) (string, error) {
+	return doCheckUpdate(appVersion,
 		updateServer+"/update", []byte(PackagePublicKey))
 }
 
 // UpdateMobile downloads the latest APK from the given url to file apkPath.
-// - if shouldProxy is true, the client proxies through the given HTTP proxy
-func UpdateMobile(shouldProxy bool, url, apkPath string, updater Updater) error {
+func UpdateMobile(url, apkPath string, updater Updater) error {
 	out, err := os.Create(apkPath)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 	defer out.Close()
-	return doUpdateMobile(shouldProxy, url, out, updater)
+	return doUpdateMobile(url, out, updater)
 }
 
-func doUpdateMobile(shouldProxy bool, url string, out *os.File, updater Updater) error {
+func doUpdateMobile(url string, out *os.File, updater Updater) error {
 	var req *http.Request
 	var res *http.Response
 
 	log.Debugf("Attempting to download APK from %s", url)
 
-	httpClient, err := proxied.GetHTTPClient(shouldProxy)
+	httpClient, err := proxied.GetHTTPClient()
 	if err != nil {
 		log.Error(err)
 		return err
