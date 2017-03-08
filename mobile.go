@@ -42,11 +42,7 @@ func doCheckUpdate(version, URL string, publicKey []byte) (string, error) {
 
 	log.Debugf("Checking for new mobile version; current version: %s", version)
 
-	httpClient, err := proxied.GetHTTPClient()
-	if err != nil {
-		log.Errorf("Could not get HTTP client to download update: %v", err)
-		return "", err
-	}
+	httpClient := pro.GetHTTPClient()
 
 	// specify go-update should use our httpClient
 	update.SetHttpClient(httpClient)
@@ -99,11 +95,7 @@ func doUpdateMobile(url string, out *os.File, updater Updater) error {
 
 	log.Debugf("Attempting to download APK from %s", url)
 
-	httpClient, err := proxied.GetHTTPClient()
-	if err != nil {
-		log.Error(err)
-		return err
-	}
+	httpClient := pro.GetHTTPClient()
 
 	if req, err = http.NewRequest("GET", url, nil); err != nil {
 		log.Errorf("Error downloading update: %v", err)
