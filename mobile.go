@@ -97,14 +97,14 @@ func doUpdateMobile(url string, out *os.File, updater Updater) error {
 
 	httpClient := pro.GetHTTPClient()
 
-	if req, err = http.NewRequest("GET", url, nil); err != nil {
+	if req, err := http.NewRequest("GET", url, nil); err != nil {
 		log.Errorf("Error downloading update: %v", err)
 		return err
 	}
 
 	req.Header.Add("Accept-Encoding", "gzip")
 
-	if res, err = httpClient.Do(req); err != nil {
+	if res, err := httpClient.Do(req); err != nil {
 		log.Errorf("Error requesting update: %v", err)
 		return err
 	}
