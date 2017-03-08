@@ -92,19 +92,20 @@ func UpdateMobile(url, apkPath string, updater Updater) error {
 func doUpdateMobile(url string, out *os.File, updater Updater) error {
 	var req *http.Request
 	var res *http.Response
+	var err error
 
 	log.Debugf("Attempting to download APK from %s", url)
 
 	httpClient := pro.GetHTTPClient()
 
-	if req, err := http.NewRequest("GET", url, nil); err != nil {
+	if req, err = http.NewRequest("GET", url, nil); err != nil {
 		log.Errorf("Error downloading update: %v", err)
 		return err
 	}
 
 	req.Header.Add("Accept-Encoding", "gzip")
 
-	if res, err := httpClient.Do(req); err != nil {
+	if res, err = httpClient.Do(req); err != nil {
 		log.Errorf("Error requesting update: %v", err)
 		return err
 	}
