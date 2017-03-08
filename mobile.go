@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/blang/semver"
-	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/go-update"
 )
 
