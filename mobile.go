@@ -104,6 +104,7 @@ func doUpdateMobile(url string, out *os.File, updater Updater) error {
 	}
 
 	req.Header.Add("Accept-Encoding", "gzip")
+	pro.PrepareForFronting(req)
 
 	if res, err = httpClient.Do(req); err != nil {
 		log.Errorf("Error requesting update: %v", err)
