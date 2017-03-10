@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/blang/semver"
-	"github.com/getlantern/flashlight/pro"
+	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/go-update"
 )
 
@@ -38,11 +38,22 @@ func (pt *byteCounter) Read(p []byte) (int, error) {
 	return n, err
 }
 
+func GetHttpClient() (*http.Client, error) {
+	rt, err := ChainedNonPersistent("")
+	if err != nil {
+		return nil, err
+	}
+	return &http.Client{
+		Transport: rt,
+	}
+
+}
+
 func doCheckUpdate(version, URL string, publicKey []byte) (string, error) {
 
 	log.Debugf("Checking for new mobile version; current version: %s", version)
 
-	httpClient := pro.GetHTTPClient()
+	httpClient := GetHTTPClient()
 
 	// specify go-update should use our httpClient
 	update.SetHttpClient(httpClient)
@@ -96,7 +107,7 @@ func doUpdateMobile(url string, out *os.File, updater Updater) error {
 
 	log.Debugf("Attempting to download APK from %s", url)
 
-	httpClient := pro.GetHTTPClient()
+	httpClient := GetHTTPClient()
 
 	if req, err = http.NewRequest("GET", url, nil); err != nil {
 		log.Errorf("Error downloading update: %v", err)
@@ -104,7 +115,6 @@ func doUpdateMobile(url string, out *os.File, updater Updater) error {
 	}
 
 	req.Header.Add("Accept-Encoding", "gzip")
-	pro.PrepareForFronting(req)
 
 	if res, err = httpClient.Do(req); err != nil {
 		log.Errorf("Error requesting update: %v", err)
