@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/blang/semver"
-	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/go-update"
 )
 
@@ -38,15 +38,11 @@ func (pt *byteCounter) Read(p []byte) (int, error) {
 	return n, err
 }
 
-func doCheckUpdate(shouldProxy bool, version, URL string, publicKey []byte) (string, error) {
+func doCheckUpdate(version, URL string, publicKey []byte) (string, error) {
 
 	log.Debugf("Checking for new mobile version; current version: %s", version)
 
-	httpClient, err := proxied.GetHTTPClient(shouldProxy)
-	if err != nil {
-		log.Errorf("Could not get HTTP client to download update: %v", err)
-		return "", err
-	}
+	httpClient := pro.GetHTTPClient()
 
 	// specify go-update should use our httpClient
 	update.SetHttpClient(httpClient)
@@ -77,34 +73,30 @@ func doCheckUpdate(shouldProxy bool, version, URL string, publicKey []byte) (str
 }
 
 // CheckMobileUpdate checks if a new update is available for mobile.
-func CheckMobileUpdate(shouldProxy bool, updateServer, appVersion string) (string, error) {
-	return doCheckUpdate(shouldProxy, appVersion,
+func CheckMobileUpdate(updateServer, appVersion string) (string, error) {
+	return doCheckUpdate(appVersion,
 		updateServer+"/update", []byte(PackagePublicKey))
 }
 
 // UpdateMobile downloads the latest APK from the given url to file apkPath.
-// - if shouldProxy is true, the client proxies through the given HTTP proxy
-func UpdateMobile(shouldProxy bool, url, apkPath string, updater Updater) error {
+func UpdateMobile(url, apkPath string, updater Updater) error {
 	out, err := os.Create(apkPath)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 	defer out.Close()
-	return doUpdateMobile(shouldProxy, url, out, updater)
+	return doUpdateMobile(url, out, updater)
 }
 
-func doUpdateMobile(shouldProxy bool, url string, out *os.File, updater Updater) error {
+func doUpdateMobile(url string, out *os.File, updater Updater) error {
 	var req *http.Request
 	var res *http.Response
+	var err error
 
 	log.Debugf("Attempting to download APK from %s", url)
 
-	httpClient, err := proxied.GetHTTPClient(shouldProxy)
-	if err != nil {
-		log.Error(err)
-		return err
-	}
+	httpClient := pro.GetHTTPClient()
 
 	if req, err = http.NewRequest("GET", url, nil); err != nil {
 		log.Errorf("Error downloading update: %v", err)
@@ -112,6 +104,7 @@ func doUpdateMobile(shouldProxy bool, url string, out *os.File, updater Updater)
 	}
 
 	req.Header.Add("Accept-Encoding", "gzip")
+	pro.PrepareForFronting(req)
 
 	if res, err = httpClient.Do(req); err != nil {
 		log.Errorf("Error requesting update: %v", err)
