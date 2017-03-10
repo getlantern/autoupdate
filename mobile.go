@@ -114,7 +114,7 @@ func doUpdateMobile(url string, out *os.File, updater Updater) error {
 	httpClient, err := GetHttpClient()
 	if err != nil {
 		log.Debugf("Error creating http client: %v", err)
-		return "", err
+		return err
 	}
 
 	if req, err = http.NewRequest("GET", url, nil); err != nil {
