@@ -45,7 +45,7 @@ func GetHttpClient() (*http.Client, error) {
 	}
 	return &http.Client{
 		Transport: rt,
-	}
+	}, nil
 
 }
 
@@ -53,7 +53,11 @@ func doCheckUpdate(version, URL string, publicKey []byte) (string, error) {
 
 	log.Debugf("Checking for new mobile version; current version: %s", version)
 
-	httpClient := GetHttpClient()
+	httpClient, err := GetHttpClient()
+	if err != nil {
+		log.Debugf("Error creating http client: %v", err)
+		return "", err
+	}
 
 	// specify go-update should use our httpClient
 	update.SetHttpClient(httpClient)
@@ -107,7 +111,11 @@ func doUpdateMobile(url string, out *os.File, updater Updater) error {
 
 	log.Debugf("Attempting to download APK from %s", url)
 
-	httpClient := GetHttpClient()
+	httpClient, err := GetHttpClient()
+	if err != nil {
+		log.Debugf("Error creating http client: %v", err)
+		return "", err
+	}
 
 	if req, err = http.NewRequest("GET", url, nil); err != nil {
 		log.Errorf("Error downloading update: %v", err)
