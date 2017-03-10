@@ -39,7 +39,7 @@ func (pt *byteCounter) Read(p []byte) (int, error) {
 }
 
 func GetHttpClient() (*http.Client, error) {
-	rt, err := ChainedNonPersistent("")
+	rt, err := proxied.ChainedNonPersistent("")
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func doCheckUpdate(version, URL string, publicKey []byte) (string, error) {
 
 	log.Debugf("Checking for new mobile version; current version: %s", version)
 
-	httpClient := GetHTTPClient()
+	httpClient := GetHttpClient()
 
 	// specify go-update should use our httpClient
 	update.SetHttpClient(httpClient)
@@ -107,7 +107,7 @@ func doUpdateMobile(url string, out *os.File, updater Updater) error {
 
 	log.Debugf("Attempting to download APK from %s", url)
 
-	httpClient := GetHTTPClient()
+	httpClient := GetHttpClient()
 
 	if req, err = http.NewRequest("GET", url, nil); err != nil {
 		log.Errorf("Error downloading update: %v", err)
