@@ -10,6 +10,7 @@ import (
 
 	"github.com/blang/semver"
 	"github.com/getlantern/flashlight/pro"
+	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/go-update"
 )
 
@@ -104,7 +105,10 @@ func doUpdateMobile(url string, out *os.File, updater Updater) error {
 	}
 
 	req.Header.Add("Accept-Encoding", "gzip")
-	pro.PrepareForFronting(req)
+
+	frontedURL := *req.URL
+	frontedURL.Host = "d2yl1zps97e5mx.cloudfront.net"
+	proxied.PrepareForFronting(req, frontedURL.String())
 
 	if res, err = httpClient.Do(req); err != nil {
 		log.Errorf("Error requesting update: %v", err)
