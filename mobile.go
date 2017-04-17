@@ -15,7 +15,7 @@ import (
 
 var (
 	httpClient = &http.Client{
-		Transport: proxied.ParallelPreferChained(),
+		Transport: proxied.ChainedThenFronted(),
 	}
 )
 
