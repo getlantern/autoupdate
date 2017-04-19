@@ -9,8 +9,14 @@ import (
 	"os"
 
 	"github.com/blang/semver"
-	"github.com/getlantern/flashlight/pro"
+	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/go-update"
+)
+
+var (
+	httpClient = &http.Client{
+		Transport: proxied.ChainedThenFronted(),
+	}
 )
 
 type Updater interface {
@@ -41,8 +47,6 @@ func (pt *byteCounter) Read(p []byte) (int, error) {
 func doCheckUpdate(version, URL string, publicKey []byte) (string, error) {
 
 	log.Debugf("Checking for new mobile version; current version: %s", version)
-
-	httpClient := pro.GetHTTPClient()
 
 	// specify go-update should use our httpClient
 	update.SetHttpClient(httpClient)
@@ -96,15 +100,16 @@ func doUpdateMobile(url string, out *os.File, updater Updater) error {
 
 	log.Debugf("Attempting to download APK from %s", url)
 
-	httpClient := pro.GetHTTPClient()
-
 	if req, err = http.NewRequest("GET", url, nil); err != nil {
 		log.Errorf("Error downloading update: %v", err)
 		return err
 	}
 
 	req.Header.Add("Accept-Encoding", "gzip")
-	pro.PrepareForFronting(req)
+
+	frontedURL := *req.URL
+	frontedURL.Host = "d2yl1zps97e5mx.cloudfront.net"
+	proxied.PrepareForFronting(req, frontedURL.String())
 
 	if res, err = httpClient.Do(req); err != nil {
 		log.Errorf("Error requesting update: %v", err)
