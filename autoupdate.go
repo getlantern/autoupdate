@@ -41,7 +41,7 @@ type Config struct {
 	HTTPClient *http.Client
 }
 
-// Apply applies the next available update whenever it is available, blocking
+// ApplyNext applies the next available update whenever it is available, blocking
 // until the next update has been applied. If ApplyNext returns without an
 // error, that means that the current program's executable has been udpated in
 // place and you may want to restart. If ApplyNext returns an error, that means
