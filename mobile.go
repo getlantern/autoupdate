@@ -15,7 +15,7 @@ import (
 
 var (
 	httpClient = &http.Client{
-		Transport: proxied.ChainedThenFronted(),
+		Transport: proxied.ChainedThenFrontedWith("d2yl1zps97e5mx.cloudfront.net", ""),
 	}
 )
 
@@ -106,10 +106,6 @@ func doUpdateMobile(url string, out *os.File, updater Updater) error {
 	}
 
 	req.Header.Add("Accept-Encoding", "gzip")
-
-	frontedURL := *req.URL
-	frontedURL.Host = "d2yl1zps97e5mx.cloudfront.net"
-	proxied.PrepareForFronting(req, frontedURL.String())
 
 	if res, err = httpClient.Do(req); err != nil {
 		log.Errorf("Error requesting update: %v", err)
