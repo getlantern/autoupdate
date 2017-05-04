@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/getlantern/golog"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,11 +16,12 @@ var (
 )
 
 type TestUpdater struct {
+	log golog.Logger
 	Updater
 }
 
 func (u *TestUpdater) PublishProgress(percentage int) {
-	log.Debugf("Current progress: %6.02d%%", percentage)
+	u.log.Debugf("Current progress: %6.02d%%", percentage)
 }
 
 func TestCheckUpdateAvailable(t *testing.T) {
@@ -37,7 +39,7 @@ func TestCheckNoUpdateUnavailable(t *testing.T) {
 // urlEmpty and shouldErr are booleans that indicate whether or not
 // CheckMobileUpdate should return a blank url or non-nil error
 func doTestCheckUpdate(t *testing.T, urlEmpty, shouldErr bool, version string) string {
-	url, err := CheckMobileUpdate(false, updateServer, version)
+	url, err := CheckMobileUpdate(updateServer, version)
 
 	if shouldErr {
 		assert.NotNil(t, err)
@@ -65,18 +67,20 @@ func TestDoUpdate(t *testing.T) {
 
 	defer os.Remove(out.Name())
 
-	testUpdater := new(TestUpdater)
+	testUpdater := &TestUpdater{
+		log: golog.LoggerFor("update-mobile-test"),
+	}
 
 	// check for an invalid apk path destination
-	err = UpdateMobile(false, url, "", testUpdater)
+	err = UpdateMobile(url, "", testUpdater)
 	assert.NotNil(t, err)
 
 	// check for a missing url
-	err = doUpdateMobile(false, "", out, testUpdater)
+	err = doUpdateMobile("", out, testUpdater)
 	assert.NotNil(t, err)
 
 	// successful update
-	err = doUpdateMobile(false, url, out, testUpdater)
+	err = doUpdateMobile(url, out, testUpdater)
 	assert.Nil(t, err)
 
 }
