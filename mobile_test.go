@@ -25,11 +25,17 @@ func (u *TestUpdater) PublishProgress(percentage int) {
 }
 
 func TestCheckUpdateAvailable(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping hitting updateserver in short mode.")
+	}
 	// test with an older version number
 	doTestCheckUpdate(t, false, false, "2.2.0")
 }
 
 func TestCheckNoUpdateUnavailable(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping hitting updateserver in short mode.")
+	}
 	// test with a blank version number
 	doTestCheckUpdate(t, true, true, "")
 	// test with a way newer version
@@ -57,6 +63,9 @@ func doTestCheckUpdate(t *testing.T, urlEmpty, shouldErr bool, version string) s
 }
 
 func TestDoUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping hitting updateserver in short mode.")
+	}
 
 	url := doTestCheckUpdate(t, false, false, "2.2.0")
 	assert.NotEmpty(t, url)

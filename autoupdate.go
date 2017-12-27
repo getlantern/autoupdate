@@ -47,12 +47,11 @@ type Config struct {
 // place and you may want to restart. If ApplyNext returns an error, that means
 // that an unrecoverable error has occurred and we can't continue checking for
 // updates.
-func ApplyNext(cfg *Config) error {
+func ApplyNext(cfg *Config) (newVersion string, err error) {
 	// Parse the semantic version
-	var err error
 	cfg.version, err = semver.Parse(cfg.CurrentVersion)
 	if err != nil {
-		return fmt.Errorf("Bad version string: %v", err)
+		return "", fmt.Errorf("Bad version string: %v", err)
 	}
 	if cfg.CheckInterval == 0 {
 		cfg.CheckInterval = defaultCheckInterval
@@ -67,7 +66,7 @@ func ApplyNext(cfg *Config) error {
 	return cfg.loop()
 }
 
-func (cfg *Config) loop() error {
+func (cfg *Config) loop() (string, error) {
 	for {
 		res, err := cfg.check()
 
@@ -82,11 +81,11 @@ func (cfg *Config) loop() error {
 				if errRecover != nil {
 					// This should never happen, if this ever happens it means bad news such as
 					// a missing executable file.
-					return fmt.Errorf("Failed to recover from failed update attempt: %v\n", errRecover)
+					return "", fmt.Errorf("Failed to recover from failed update attempt: %v\n", errRecover)
 				}
 				if err == nil {
 					log.Debugf("Patching succeeded!")
-					return nil
+					return res.Version, nil
 				}
 				log.Errorf("Patching failed: %q\n", err)
 			} else {
