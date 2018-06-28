@@ -15,7 +15,7 @@ import (
 
 var (
 	httpClient = &http.Client{
-		Transport: proxied.ChainedThenFrontedWith("d2yl1zps97e5mx.cloudfront.net", ""),
+		Transport: proxied.ChainedThenFrontedWith(""),
 	}
 )
 
