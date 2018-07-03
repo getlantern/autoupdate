@@ -9,14 +9,6 @@ import (
 	"os"
 
 	"github.com/blang/semver"
-	"github.com/getlantern/flashlight/proxied"
-	"github.com/getlantern/go-update"
-)
-
-var (
-	httpClient = &http.Client{
-		Transport: proxied.ChainedThenFrontedWith(""),
-	}
 )
 
 type Updater interface {
@@ -44,14 +36,11 @@ func (pt *byteCounter) Read(p []byte) (int, error) {
 	return n, err
 }
 
-func doCheckUpdate(version, URL string, publicKey []byte) (string, error) {
+// CheckMobileUpdate checks if a new update is available for mobile.
+func CheckMobileUpdate(cfg *Config) (string, error) {
+	log.Debugf("Checking for new mobile version; current version: %s", cfg.CurrentVersion)
 
-	log.Debugf("Checking for new mobile version; current version: %s", version)
-
-	// specify go-update should use our httpClient
-	update.SetHttpClient(httpClient)
-
-	res, err := checkUpdate(version, URL, publicKey)
+	res, err := cfg.check()
 	if err != nil {
 		log.Errorf("Error checking for update for mobile: %v", err)
 		return "", err
@@ -62,7 +51,7 @@ func doCheckUpdate(version, URL string, publicKey []byte) (string, error) {
 		return "", nil
 	}
 
-	v, err := semver.Make(version)
+	v, err := semver.Make(cfg.CurrentVersion)
 	if err != nil {
 		log.Errorf("Error checking for update; could not parse version number: %v", err)
 		return "", err
@@ -76,24 +65,18 @@ func doCheckUpdate(version, URL string, publicKey []byte) (string, error) {
 	return "", nil
 }
 
-// CheckMobileUpdate checks if a new update is available for mobile.
-func CheckMobileUpdate(updateServer, appVersion string) (string, error) {
-	return doCheckUpdate(appVersion,
-		updateServer+"/update", []byte(PackagePublicKey))
-}
-
 // UpdateMobile downloads the latest APK from the given url to file apkPath.
-func UpdateMobile(url, apkPath string, updater Updater) error {
+func UpdateMobile(url, apkPath string, updater Updater, httpClient *http.Client) error {
 	out, err := os.Create(apkPath)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 	defer out.Close()
-	return doUpdateMobile(url, out, updater)
+	return doUpdateMobile(url, out, updater, httpClient)
 }
 
-func doUpdateMobile(url string, out *os.File, updater Updater) error {
+func doUpdateMobile(url string, out *os.File, updater Updater, httpClient *http.Client) error {
 	var req *http.Request
 	var res *http.Response
 	var err error
@@ -107,6 +90,9 @@ func doUpdateMobile(url string, out *os.File, updater Updater) error {
 
 	req.Header.Add("Accept-Encoding", "gzip")
 
+	if httpClient == nil {
+		httpClient = &http.Client{}
+	}
 	if res, err = httpClient.Do(req); err != nil {
 		log.Errorf("Error requesting update: %v", err)
 		return err

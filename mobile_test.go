@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	updateServer = "https://update-stage.getlantern.org/update"
+	updateURL = "https://update.getlantern.org/update"
 )
 
 type TestUpdater struct {
@@ -20,7 +20,7 @@ type TestUpdater struct {
 	Updater
 }
 
-func (u *TestUpdater) PublishProgress(percentage int) {
+func (u *TestUpdater) Progress(percentage int) {
 	u.log.Debugf("Current progress: %6.02d%%", percentage)
 }
 
@@ -32,7 +32,7 @@ func TestCheckUpdateAvailable(t *testing.T) {
 	doTestCheckUpdate(t, false, false, "2.2.0")
 }
 
-func TestCheckNoUpdateUnavailable(t *testing.T) {
+func TestCheckUpdateUnavailable(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping hitting updateserver in short mode.")
 	}
@@ -45,7 +45,17 @@ func TestCheckNoUpdateUnavailable(t *testing.T) {
 // urlEmpty and shouldErr are booleans that indicate whether or not
 // CheckMobileUpdate should return a blank url or non-nil error
 func doTestCheckUpdate(t *testing.T, urlEmpty, shouldErr bool, version string) string {
-	url, err := CheckMobileUpdate(updateServer, version)
+
+	config := &Config{
+		URL:            updateURL,
+		CurrentVersion: version,
+		PublicKey:      []byte(PackagePublicKey),
+		OS:             "android",
+		Arch:           "arm",
+		Channel:        "stable",
+	}
+
+	url, err := CheckMobileUpdate(config)
 
 	if shouldErr {
 		assert.NotNil(t, err)
@@ -68,7 +78,9 @@ func TestDoUpdate(t *testing.T) {
 	}
 
 	url := doTestCheckUpdate(t, false, false, "2.2.0")
-	assert.NotEmpty(t, url)
+	if !assert.NotEmpty(t, url) {
+		return
+	}
 
 	// create a temporary file to write the update to
 	out, err := ioutil.TempFile(os.TempDir(), "update")
@@ -81,15 +93,15 @@ func TestDoUpdate(t *testing.T) {
 	}
 
 	// check for an invalid apk path destination
-	err = UpdateMobile(url, "", testUpdater)
+	err = UpdateMobile(url, "", testUpdater, nil)
 	assert.NotNil(t, err)
 
 	// check for a missing url
-	err = doUpdateMobile("", out, testUpdater)
+	err = doUpdateMobile("", out, testUpdater, nil)
 	assert.NotNil(t, err)
 
 	// successful update
-	err = doUpdateMobile(url, out, testUpdater)
+	err = doUpdateMobile(url, out, testUpdater, nil)
 	assert.Nil(t, err)
 
 }
