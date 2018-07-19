@@ -16,7 +16,6 @@ import (
 var (
 	log                  = golog.LoggerFor("autoupdate")
 	defaultCheckInterval = time.Hour * 4
-	defaultHTTPClient    = &http.Client{}
 )
 
 type Config struct {
@@ -39,6 +38,13 @@ type Config struct {
 
 	// HTTPClient: (optional), an http.Client to use when checking for updates
 	HTTPClient *http.Client
+
+	// Operating system (optional, will be inferred)
+	OS string
+	// Arch (optional, will be inferred)
+	Arch string
+	// Channel (optional, defaults to stable)
+	Channel string
 }
 
 // ApplyNext applies the next available update whenever it is available, blocking
@@ -57,12 +63,6 @@ func ApplyNext(cfg *Config) (newVersion string, err error) {
 		cfg.CheckInterval = defaultCheckInterval
 		log.Debugf("Defaulted CheckInterval to %v", cfg.CheckInterval)
 	}
-	if cfg.HTTPClient == nil {
-		cfg.HTTPClient = defaultHTTPClient
-		log.Debug("Defaulted HTTPClient")
-	}
-	update.HTTPClient = cfg.HTTPClient
-
 	return cfg.loop()
 }
 
@@ -106,20 +106,26 @@ func isNewerVersion(version semver.Version, newer string) bool {
 	return nv.GT(version)
 }
 
-func checkUpdate(currentVersion, URL string, publicKey []byte) (res *check.Result, err error) {
-	var up *update.Update
-
-	param := check.Params{
-		AppVersion: currentVersion,
+// check uses go-update to look for updates.
+func (cfg *Config) check() (res *check.Result, err error) {
+	params := &check.Params{
+		AppVersion: cfg.CurrentVersion,
+		OS:         cfg.OS,
+		Arch:       cfg.Arch,
+		Channel:    cfg.Channel,
 	}
+
+	update.SetHttpClient(cfg.HTTPClient)
+
+	var up *update.Update
 
 	up = update.New().ApplyPatch(update.PATCHTYPE_BSDIFF)
 
-	if _, err = up.VerifySignatureWithPEM(publicKey); err != nil {
+	if _, err = up.VerifySignatureWithPEM(cfg.PublicKey); err != nil {
 		return nil, fmt.Errorf("Problem verifying signature of update: %v", err)
 	}
 
-	if res, err = param.CheckForUpdate(URL, up); err != nil {
+	if res, err = params.CheckForUpdate(cfg.URL, up); err != nil {
 		if err == check.ErrNoUpdateAvailable {
 			return nil, nil
 		}
@@ -127,9 +133,4 @@ func checkUpdate(currentVersion, URL string, publicKey []byte) (res *check.Resul
 	}
 
 	return res, nil
-}
-
-// check uses go-update to look for updates.
-func (cfg *Config) check() (res *check.Result, err error) {
-	return checkUpdate(cfg.CurrentVersion, cfg.URL, cfg.PublicKey)
 }
