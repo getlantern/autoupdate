@@ -3,8 +3,8 @@
 package autoupdate
 
 import (
-	"io/ioutil"
-	"os"
+	"io"
+	"net/http"
 	"testing"
 
 	"github.com/getlantern/golog"
@@ -82,26 +82,36 @@ func TestDoUpdate(t *testing.T) {
 		return
 	}
 
-	// create a temporary file to write the update to
-	out, err := ioutil.TempFile(os.TempDir(), "update")
-	assert.Nil(t, err)
-
-	defer os.Remove(out.Name())
-
 	testUpdater := &TestUpdater{
 		log: golog.LoggerFor("update-mobile-test"),
 	}
 
 	// check for an invalid apk path destination
-	err = UpdateMobile(url, "", testUpdater, nil)
+	err := UpdateMobile(url, "", testUpdater, nil)
 	assert.NotNil(t, err)
 
 	// check for a missing url
-	err = doUpdateMobile("", out, testUpdater, nil)
+	err = doUpdateMobile("", io.Discard, testUpdater, nil)
 	assert.NotNil(t, err)
 
 	// successful update
-	err = doUpdateMobile(url, out, testUpdater, nil)
+	err = doUpdateMobile(url, io.Discard, testUpdater, nil)
 	assert.Nil(t, err)
 
+}
+
+type testRoundTrip struct{}
+
+func (testRoundTrip) RoundTrip(*http.Request) (*http.Response, error) {
+	return &http.Response{StatusCode: http.StatusGatewayTimeout, Status: "504 Gateway Timeout", Body: http.NoBody}, nil
+}
+
+func TestDoUpdateMobile(t *testing.T) {
+	testUpdater := &TestUpdater{
+		log: golog.LoggerFor("update-mobile-test"),
+	}
+
+	// should return an invalid status code error
+	err := doUpdateMobile("", io.Discard, testUpdater, &http.Client{Transport: new(testRoundTrip)})
+	assert.ErrorContains(t, err, ErrInvalidStatusCode.Error())
 }

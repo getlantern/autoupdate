@@ -117,9 +117,7 @@ func (cfg *Config) check() (res *check.Result, err error) {
 
 	update.SetHttpClient(cfg.HTTPClient)
 
-	var up *update.Update
-
-	up = update.New().ApplyPatch(update.PATCHTYPE_BSDIFF)
+	up := update.New().ApplyPatch(update.PATCHTYPE_BSDIFF)
 
 	if _, err = up.VerifySignatureWithPEM(cfg.PublicKey); err != nil {
 		return nil, fmt.Errorf("Problem verifying signature of update: %v", err)

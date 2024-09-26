@@ -3,8 +3,9 @@ package autoupdate
 import (
 	"bytes"
 	"compress/bzip2"
+	"errors"
+	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -76,14 +77,16 @@ func UpdateMobile(url, apkPath string, updater Updater, httpClient *http.Client)
 	return doUpdateMobile(url, out, updater, httpClient)
 }
 
-func doUpdateMobile(url string, out *os.File, updater Updater, httpClient *http.Client) error {
+var ErrInvalidStatusCode = errors.New("request returned unexpected status code")
+
+func doUpdateMobile(url string, out io.Writer, updater Updater, httpClient *http.Client) error {
 	var req *http.Request
 	var res *http.Response
 	var err error
 
 	log.Debugf("Attempting to download APK from %s", url)
 
-	if req, err = http.NewRequest("GET", url, nil); err != nil {
+	if req, err = http.NewRequest("GET", url, http.NoBody); err != nil {
 		log.Errorf("Error downloading update: %v", err)
 		return err
 	}
@@ -97,8 +100,12 @@ func doUpdateMobile(url string, out *os.File, updater Updater, httpClient *http.
 		log.Errorf("Error requesting update: %v", err)
 		return err
 	}
-
 	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		log.Errorf("failed to download update, status code: ", res.StatusCode)
+		return fmt.Errorf("%w: expected status 200 status code but got %d", ErrInvalidStatusCode, res.StatusCode)
+	}
 
 	// We use a special byteCounter that storres a reference
 	// to the updater interface to make it easy to publish progress
@@ -106,7 +113,7 @@ func doUpdateMobile(url string, out *os.File, updater Updater, httpClient *http.
 	bytespt := &byteCounter{Updater: updater,
 		Reader: res.Body, length: res.ContentLength}
 
-	contents, err := ioutil.ReadAll(bytespt)
+	contents, err := io.ReadAll(bytespt)
 	if err != nil {
 		log.Errorf("Error reading update: %v", err)
 		return err
