@@ -1,12 +1,12 @@
 module github.com/getlantern/autoupdate
 
-go 1.19
+go 1.24.1
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/getlantern/go-update v0.0.0-20230221120840-8d795213a8bc
+	github.com/getlantern/go-update v0.0.0-20250424174722-01d3413d1e6d
 	github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
@@ -16,7 +16,7 @@ require (
 	github.com/getlantern/hex v0.0.0-20190417191902-c6586a6fe0b7 // indirect
 	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55 // indirect
 	github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f // indirect
-	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031 // indirect
+	github.com/getlantern/osversion v0.0.0-20250424174400-d834340603cf // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/kr/binarydist v0.1.0 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
